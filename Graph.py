@@ -1,8 +1,5 @@
 from heapq import *
 
-import bcolors
-import numpy
-from heapdict import heapdict
 from DisjointSet import DisjointSet
 from Edge import Edge
 
@@ -36,11 +33,35 @@ class Graph:
             self.adjMatrix.append([0 for i in range(self.numVertices)])
 
     def addEdge(self, u, v, weight=1):
-        edge = Edge(u, v, weight)
-        self.edges.append(edge)
-        self.original_edges.append(edge)
+        self.edges.append(Edge(u, v, weight))
+        self.original_edges.append(Edge(u, v, weight))
         self.adjMatrix[u][v] = 1
         self.adjMatrix[v][u] = 1
+
+    def kruskalMST(self):
+        self.MST_weight = 0
+        sumOfWeights = 0
+        self.edges.sort(key=lambda x: x.w, reverse=False)
+        ds = DisjointSet(self.numVertices)
+        for e in self.edges:
+            u = e.u
+            v = e.v
+            set_of_u = ds.Find(u)
+            set_of_v = ds.Find(v)
+            if set_of_u != set_of_v:
+                w = e.w
+                self.MST.append(Edge(u, v, w))
+                sumOfWeights += w
+                ds.Union(set_of_u, set_of_v)
+
+        for mst_edge in self.MST:
+            for original_edge in self.original_edges:
+                if original_edge.u == mst_edge.u and original_edge.v == mst_edge.v:
+                    self.MST_weight = self.MST_weight + original_edge.w
+                    # mst_edge.w = original_edge.w
+                    break
+
+        return sumOfWeights
 
     def containsCycle(self, visited_list):
         for e in self.edges:
@@ -60,8 +81,6 @@ class Graph:
                 return False
         return True
 
-        # TODO: Burda kaldın
-
     def printGraph(self):
         for row in self.adjMatrix:
             for val in row:
@@ -72,17 +91,23 @@ class Graph:
         for e in self.MST:
             print(str(e.u) + " -> " + str(e.v) + " (w:" + str(e.w) + ")")
 
+    def modifyWeight(self, edge, weight):
+        for e in self.edges:
+            if e.u == edge.u and e.v == edge.v:
+                e.w = weight
+                break
+
     def printAllST(self):
         partitions = []
         counter = 0
-        weight = kruskalMST(self)
+        weight = self.kruskalMST()
         heappush(partitions, self)
         while len(partitions) > 0:
             smallest = heappop(partitions)
             print(counter)
             counter += 1
             smallest.printMST()
-            print("Weight of MST is: " + str(weight))
+            print("Weight of MST is: " + str(smallest.MST_weight))
             print()
             i = 0
             for e in smallest.MST:
@@ -97,7 +122,7 @@ class Graph:
                 for z in range(i, i + j):
                     for parts_edge in part.edges:
                         if smallest.MST[z].u == parts_edge.u and smallest.MST[z].v == parts_edge.v:
-                            modifyWeight(part, parts_edge, 0)
+                            part.modifyWeight(parts_edge, 0)
                             break
 
                 for z in range(0, len(part.edges)):
@@ -106,7 +131,7 @@ class Graph:
                         break
 
                 if part.isConnected():
-                    kruskalMST(part)
+                    part.kruskalMST()
                     if len(part.MST) < part.numVertices - 1:
                         continue
                     heappush(partitions, part)
@@ -120,35 +145,3 @@ def remove(arr, i):
     # slicing from i+1th index
     b = arr[i + 1:]
     return a + b
-
-
-def kruskalMST(self):
-    self.MST_weight = 0
-    sumOfWeights = 0
-    self.edges.sort(key=lambda x: x.w, reverse=False)
-    ds = DisjointSet(self.numVertices)
-    for e in self.edges:
-        u = e.u
-        v = e.v
-        set_of_u = ds.Find(u)
-        set_of_v = ds.Find(v)
-        if set_of_u != set_of_v:
-            w = e.w
-            self.MST.append(Edge(u, v, w))
-            sumOfWeights += w
-            ds.Union(set_of_u, set_of_v)
-
-    for mst_edge in self.MST:
-        for original_edge in self.original_edges:
-            if original_edge.u == mst_edge.u and original_edge.v == mst_edge.v:
-                self.MST_weight = self.MST_weight + original_edge.w
-                break
-
-    return sumOfWeights
-
-
-def modifyWeight(self, edge, weight):
-    for e in self.edges:
-        if e.u == edge.u and e.v == edge.v:
-            e.w = weight
-            break
