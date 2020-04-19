@@ -1,15 +1,8 @@
-# this program aims finding all fundamental cut sets,
-# when the spanning tree T in undirected graph G is given
-# Python 3.6
-# rongjian liu <rongjliu@foxmail.com>
-# Jun/16/2018
-#
-# Refernece: Saxena, S. (2010). On finding fundamental cut sets. Information Processing Letters, 110(4), 168-170.
 import copy
 from enum import Enum
 
-from Edge import CutSetEdge
-from Matrix_G import Matrix_G
+from src.Edge import CutSetEdge
+from src.Matrix_G import Matrix_G
 
 
 class COLOR(Enum):
@@ -21,7 +14,7 @@ class COLOR(Enum):
 WHITE = COLOR.WHITE
 GRAY = COLOR.GRAY
 BLACK = COLOR.BLACK
-txtName = "G.txt"
+txtName = "OUT_ALL_CUT_SETS.txt"
 
 
 # section Algorithm in Refernece Saxena, S. (2010).
@@ -52,8 +45,7 @@ def calculateFundamentalCutsets(G):
 
     temp = Matrix_G(G.numVertices, G.adjMatrix)
     Gmatrix.Matrix = copy.deepcopy(temp.Matrix)
-    Gmatrix.writetxt()
-
+    Gmatrix.writetxt(txtName)
     G.initializeGraphWithMatris(Gmatrix)
     G.preprocess()
     G.alphaprocess()
@@ -62,8 +54,6 @@ def calculateFundamentalCutsets(G):
     f.write("\nthe fundmental cut sets are: \nbegin \nthe root vertex is " + str(G.root_vertex) + '.\n')
     for i in range(len(S)):
         SI = S[i]
-        # print(type(SI))
-        # str1=str(i)
         if G.vertex[i].parent == -1:
             continue
         else:

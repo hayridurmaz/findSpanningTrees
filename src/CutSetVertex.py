@@ -1,4 +1,4 @@
-from findCutSets import WHITE
+from src.findCutSets import WHITE
 
 
 class CutSetVertex:

@@ -1,11 +1,11 @@
 import copy
 from heapq import *
 
-from CutSetVertex import CutSetVertex
-from DisjointSet import DisjointSet
-from Edge import Edge
-from Matrix_G import Matrix_G
-from findCutSets import COLOR
+from src.CutSetVertex import CutSetVertex
+from src.DisjointSet import DisjointSet
+from src.Edge import Edge
+from src.Matrix_G import Matrix_G
+from src.findCutSets import COLOR
 
 WHITE = COLOR.WHITE
 GRAY = COLOR.GRAY
@@ -20,7 +20,7 @@ class Graph:
         self.original_edges = []
         self.MST = []
         self.MST_weight = 0
-        self.root_vertex = 0  # default root is vertex 0
+        self.root_vertex = 2  # default root is vertex 0
         self.matrix = [[] for i in range(V)]
         self.Matrix = Matrix_G()
         self.edge = [[] for i in range(V)]
@@ -38,6 +38,7 @@ class Graph:
         self.edges[:] = graph.edges
         self.adjMatrix[:] = graph.adjMatrix
         self.original_edges[:] = graph.original_edges
+        self.vertex[:] = graph.vertex
 
     def initAdjMatris(self):
         for i in range(self.numVertices):
@@ -92,7 +93,6 @@ class Graph:
 
     # label every vertex in graph, previsit time and postvisit time for every vertex in tree T
     def preprocess(self):
-
         F = []
         # F.append(self.root_vertex)
         self.vertex[self.root_vertex].previsit = self.t1
@@ -166,9 +166,10 @@ class Graph:
                 return False
         return True
 
-    def printMST(self):
+    def printMST(self, file):
         for e in self.MST:
-            print(str(e.u) + " -> " + str(e.v) + " (w:" + str(e.w) + ")")
+            # print(str(e.u) + " -> " + str(e.v) + " (w:" + str(e.w) + ")")
+            file.write(str(e.u) + " -> " + str(e.v) + " (w:" + str(e.w) + ")" + "\n")
 
     def modifyWeight(self, edge, weight):
         for e in self.edges:
@@ -177,17 +178,19 @@ class Graph:
                 break
 
     def printAllST(self):
+        file = open("OUT_ALL_SPANNING_TREES.txt", "a+")
         partitions = []
         counter = 0
         weight = self.kruskalMST()
         heappush(partitions, self)
         while len(partitions) > 0:
             smallest = heappop(partitions)
-            print(counter)
+            # print(counter)
             counter += 1
-            smallest.printMST()
-            print("Weight of MST is: " + str(smallest.MST_weight))
-            print()
+            smallest.printMST(file)
+            # print("Weight of MST is: " + str(smallest.MST_weight))
+            file.write("Weight of MST is: " + str(smallest.MST_weight) + "\n\n")
+            # print()
             i = 0
             for e in smallest.MST:
                 if e.w == 0:
@@ -216,6 +219,7 @@ class Graph:
                     heappush(partitions, part)
                 else:
                     continue
+        file.close()
 
 
 def remove(arr, i):
