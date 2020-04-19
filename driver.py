@@ -1,7 +1,7 @@
 import bcolors as bcolors
-from heapq import *
 
 from Graph import Graph
+from findCutSets import calculateFundamentalCutsets
 
 
 def parseGraphFromFile(filename):
@@ -13,7 +13,7 @@ def parseGraphFromFile(filename):
         if i == 0:
             try:
                 verticeCount = int(allLines[i])
-                g.numVertices = verticeCount
+                g = Graph(verticeCount)
                 g.initAdjMatris()
             except:
                 print(bcolors.ERR + "ERROR: First line as to be 1 integer representing vertice count!" + bcolors.ENDC)
@@ -31,7 +31,8 @@ def parseGraphFromFile(filename):
 
 if __name__ == '__main__':
     graph = parseGraphFromFile("graphInput.txt")
-    print(graph.printGraph())
+    graph.printGraph()
     if not graph.isConnected():
         print(bcolors.ERR + "ERROR: Given input graph is not connected graph" + bcolors.ENDC)
     graph.printAllST()
+    calculateFundamentalCutsets(graph)

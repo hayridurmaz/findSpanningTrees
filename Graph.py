@@ -1,22 +1,36 @@
+import copy
 from heapq import *
 
+from CutSetVertex import CutSetVertex
 from DisjointSet import DisjointSet
 from Edge import Edge
+from Matrix_G import Matrix_G
+from findCutSets import COLOR
+
+WHITE = COLOR.WHITE
+GRAY = COLOR.GRAY
+BLACK = COLOR.BLACK
 
 
 class Graph:
-    def __init__(self):
-        self.numVertices = 0
+    def __init__(self, V=0):
+        self.numVertices = V
         self.edges = []
         self.adjMatrix = []
         self.original_edges = []
         self.MST = []
         self.MST_weight = 0
+        self.root_vertex = 0  # default root is vertex 0
+        self.matrix = [[] for i in range(V)]
+        self.Matrix = Matrix_G()
+        self.edge = [[] for i in range(V)]
+        self.vertex = []  # append(Vertex(i))
+        self.t1 = 0  # label for previsit postvisit in vertex
+        self.t2 = 0  # label for pre in vertex
 
     def initializeGraph(self, graph):
         self.numVertices = 0
         self.edges = []
-        self.adjMatrix = []
         self.original_edges = []
         self.MST = []
         self.MST_weight = 0
@@ -25,12 +39,83 @@ class Graph:
         self.adjMatrix[:] = graph.adjMatrix
         self.original_edges[:] = graph.original_edges
 
-    def __lt__(self, other):
-        return self.MST_weight < other.MST_weight
-
     def initAdjMatris(self):
         for i in range(self.numVertices):
             self.adjMatrix.append([0 for i in range(self.numVertices)])
+
+    def initializeGraphWithMatris(self, M=Matrix_G()):
+        self.matrix = copy.deepcopy(M.Matrix)
+        self.Matrix = copy.deepcopy(M)
+        for i in range(self.numVertices):
+            for j in range(self.numVertices):
+                if self.matrix[i][j] != 0:
+                    self.edge[i].append(j)
+        for i in range(self.numVertices):
+            self.vertex.append(CutSetVertex(i))
+
+    def Print(self):
+        print("adjacent matrix:")
+        self.Matrix.Print()
+        print('vertex:')
+        for i in range(self.N):
+            self.vertex[i].Print()
+        print('edge:')
+        for i in range(self.N):
+            print(i, ":", self.edge[i])
+
+    def printGraph(self):
+        for row in self.adjMatrix:
+            for val in row:
+                print('{:4}'.format(val), end=" ")
+            print("")
+
+    # recursive callable, sub-program for preprocess
+    def subpreprocess(self, F):
+        # print('line145=',F)
+        for i in range(len(F)):
+            e = F[i]
+            FF = []
+            self.vertex[e].previsit = self.t1
+            self.t1 = self.t1 + 1
+            self.vertex[e].pre = self.t2
+            self.t2 = self.t2 + 1
+            self.vertex[e].color = BLACK
+            for i in range(len(self.edge[e])):
+                if self.vertex[self.edge[e][i]].color == WHITE and self.vertex[self.edge[e][i]].parent == -1:
+                    FF.append(self.edge[e][i])
+                    self.vertex[self.edge[e][i]].parent = e
+            for i in range(len(FF)):
+                self.vertex[e].descendants.append(FF[i])  # the descendants of vertex e
+            self.subpreprocess(FF)  # the spanning tree is embedded in this function
+            self.vertex[e].postvisit = self.t1
+            self.t1 = self.t1 + 1
+
+    # label every vertex in graph, previsit time and postvisit time for every vertex in tree T
+    def preprocess(self):
+
+        F = []
+        # F.append(self.root_vertex)
+        self.vertex[self.root_vertex].previsit = self.t1
+        self.t1 = self.t1 + 1
+        self.vertex[self.root_vertex].pre = self.t2
+        self.t2 = self.t2 + 1
+        self.vertex[self.root_vertex].color = BLACK
+        for i in range(len(self.edge[self.root_vertex])):
+            if self.vertex[self.edge[self.root_vertex][i]].color == WHITE:
+                F.append(self.edge[self.root_vertex][i])
+                self.vertex[self.edge[self.root_vertex][i]].parent = self.root_vertex
+        for i in range(len(F)):
+            self.vertex[self.root_vertex].descendants.append(F[i])  # the descendants of root vertex
+        self.subpreprocess(F)
+        self.vertex[self.root_vertex].postvisit = self.t1
+
+    def alphaprocess(self):  # produce \alpha(v) in Refernece Saxena, S. (2010).
+        for i in range(self.numVertices):
+            self.vertex[i].alpha = int((self.vertex[i].postvisit - self.vertex[i].previsit - 1) / 2) + self.vertex[
+                i].pre
+
+    def __lt__(self, other):
+        return self.MST_weight < other.MST_weight
 
     def addEdge(self, u, v, weight=1):
         self.edges.append(Edge(u, v, weight))
@@ -80,12 +165,6 @@ class Graph:
             if not visited_list[i]:
                 return False
         return True
-
-    def printGraph(self):
-        for row in self.adjMatrix:
-            for val in row:
-                print('{:4}'.format(val), end=" ")
-            print("")
 
     def printMST(self):
         for e in self.MST:
